@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useSnapshot } from 'valtio';
 import config from '../config/config';
@@ -61,11 +61,15 @@ const Customizer = () => {
         })
       })
 
-      const data = await response.json();
-
-      handleDecals(type, `data:image/png;base64,${data.photo}`)
+      if (response.ok) {
+        const data = await response.json();
+        handleDecals(type, `data:image/png;base64,${data.photo}`);
+      } else {
+        const errorData = await response.json();
+        console.log(`Error: ${errorData.message || 'Failed to generate image'}`);
+      }
     } catch (error) {
-      alert(error)
+      alert(error);
     } finally{
       setGeneratingImg(false);
       setActiveEditorTab("");

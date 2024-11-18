@@ -1,33 +1,47 @@
 import express from 'express';
+import axios from 'axios';
 import * as dotenv from 'dotenv';
-import { Configuration, OpenAIApi } from 'openai';
+import OpenAI from 'openai';
 
 dotenv.config();
 
 const router = express.Router();
 
-const config = new Configuration({
-    apiKey: process.env.OPENAI_API_KEY,
-});
+// const openai = new OpenAI({
+//     apiKey: process.env.OPENAI_API_KEY,
+// });
 
-const openai = new OpenAIApi(config);
+const HF_API_URL = 'https://api-inference.huggingface.co/models/Shitao/OmniGen-v1';
+
+
 
 router.route('/').get((req, res) => {
     res.status(200).json({ message: "Hello from DALL.E Routes" })
 })
 
-router.route('/').post(async(req, res) =>{
+router.route('/').post(async (req, res) => {
     try {
         const { prompt } = req.body;
 
-        const response = await openai.createImage({
-            prompt,
-            n: 1,
-            size: '1024x1024',
-            response_format: 'b64_json'
-        });
+        // const response = await openai.images.generate({
+        //     prompt,
+        //     n: 1,
+        //     size: '1024x1024',
+        //     response_format: 'b64_json'
+        // });
+        const response = await axios.post(
+            HF_API_URL,
+            { inputs: prompt },
+            { timeout: 30000 },
+            {
+                headers: {
+                    Authorization: `Bearer ${process.env.HF_API_KEY}`,
+                    "Content-Type": "application/json"
+                },
+            }
+        );
 
-        const image = response.data.data[0].b64_json;
+        const image = response.data;
         res.status(200).json({ photo: image })
 
     } catch (error) {
